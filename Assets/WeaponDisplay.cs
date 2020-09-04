@@ -23,11 +23,11 @@ public class WeaponDisplay : MonoBehaviour
     {
         try
         {
-            if (weapon.status == "shooting")
+            if (weapon.status == ShootingScript.ShootingStatus.shooting)
             {
-                weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3((((float)weapon.currentAmmo / (float)weapon.maxAmmo) - 1) * weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
+                weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3((((float)weapon.currentAmmos[weapon.weapon.index] / (float)weapon.maxAmmo) - 1) * weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
             }
-            if (weapon.status == "reloading")
+            if (weapon.status == ShootingScript.ShootingStatus.reloading)
             {
                 weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3(-(weapon.currentReloadTime / weapon.reloadTime) * weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
             }

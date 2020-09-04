@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Assets.Scripts;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -44,6 +45,7 @@ public class FireInRange : MonoBehaviour
                 if (currentTime > delayShot)
                 {
                     Vector3 toTarget = hits.Where(el => targets.Contains(el.tag)).First().transform.position - transform.position;
+                    toTarget = Utilities.Rotate(toTarget, Utilities.GetReduceAccuracyAngle(accuracy));
                     GameObject bullet = Instantiate(projectile, transform.position, Quaternion.identity);
                     bullet.GetComponent<Rigidbody2D>().velocity = bulletSpeed * toTarget.normalized;
                     currentTime = 0;
@@ -53,5 +55,4 @@ public class FireInRange : MonoBehaviour
         currentTime += Time.deltaTime;
     }
     
-
 }

@@ -71,5 +71,12 @@ namespace Assets.Scripts
         {
             return Mathf.Round(f * 10f) / 10f;
         }
+
+        public static float GetReduceAccuracyAngle(float accuracy)
+        {
+            float range = (1 - accuracy / 100f)*Mathf.PI;
+            float r = Random.Range(-range, range);
+            return r;
+        }
     }
 }

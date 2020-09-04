@@ -17,8 +17,9 @@ namespace Assets.Scripts
         public float delayShoot;
         public float baseBulletSpeed;
         public string firingMode;
+        public int index;
 
-        public Weapon(string name, float reloadSpeed, float acuracy, int currentAmmo, int maxAmmo, float damage, float delayShoot, float baseBulletSpeed, string firingMode)
+        public Weapon(string name, float reloadSpeed, float acuracy, int currentAmmo, int maxAmmo, float damage, float delayShoot, float baseBulletSpeed, string firingMode, int index)
         {
             this.name = name;
             this.reloadTime = reloadSpeed;
@@ -29,6 +30,7 @@ namespace Assets.Scripts
             this.delayShoot = delayShoot;
             this.baseBulletSpeed = baseBulletSpeed;
             this.firingMode = firingMode;
+            this.index = index;
         }
     }
 }

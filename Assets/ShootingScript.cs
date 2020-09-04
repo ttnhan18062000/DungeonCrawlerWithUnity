@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 public class ShootingScript : MonoBehaviour
 {
@@ -25,9 +26,10 @@ public class ShootingScript : MonoBehaviour
 
     public float reduceAcuracyAngle;
 
-    public string status = "shooting";
+    public enum ShootingStatus { shooting, reloading, outofammo}
 
-    public int currentAmmo;
+    public ShootingStatus status = ShootingStatus.shooting;
+
     public int maxAmmo;
     public float reloadTime;
 
@@ -40,16 +42,19 @@ public class ShootingScript : MonoBehaviour
     public float accuracyThreshold;
 
     public List<float> accuracyThresholdRatios = new List<float>(4) { 5, 2, 5, 2 };
-    public List<string> weaponNames = new List<string>(4) { "Pistol", "Shotgun", "Assault", "SniperRifle" };
+    public List<string> weaponNames;
+    public List<int> currentAmmos = new List<int>();
 
     private AudioSource normalShootingAudio;
+    private CharacterScript characterScript;
 
     private void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
         shootingPoint = Resources.Load<GameObject>("Prefabs/Character/ShootingPosition");
         normalShootingAudio = GetComponent<AudioSource>();
-        status = "shooting";
+        characterScript = GetComponent<CharacterScript>();
+        status = ShootingStatus.shooting;
     }
 
     void Start()
@@ -86,7 +91,6 @@ public class ShootingScript : MonoBehaviour
         float gunMastery = character.GetStats("Gun Mastery");
 
         maxAmmo = weapon.maxAmmo;
-        currentAmmo = weapon.currentAmmo;
 
         reloadTime = weapon.reloadTime / (gunMastery + 1f);
 
@@ -94,14 +98,24 @@ public class ShootingScript : MonoBehaviour
         meanAccuracy = (100 - baseAccuracy) * 1f / 3f + baseAccuracy;
         accuracyReducePerShoot = 0.3f / (gunMastery / 4f + 1f);
         accuracyRecoverySpeed = 2f;
-        accuracyThreshold = 100 - (100 - meanAccuracy) * accuracyThresholdRatios[weaponNames.IndexOf(weapon.name)];
+        accuracyThreshold = 100 - (100 - meanAccuracy) * accuracyThresholdRatios[weapon.index];
         currentAccuracy = baseAccuracy;
     }
 
     public void Reload()
     {
-        status = "reloading";
-        currentReloadTime = reloadTime;
+        int ammo = characterScript.GetNumAmmoCanBeReloaded(weapon.name);
+        int weaponIndex = weapon.index;
+        characterScript.UpdateAmmo(weapon.name, -(ammo - currentAmmos[weaponIndex]));
+        if (ammo == 0)
+            status = ShootingStatus.outofammo;
+        else
+        {
+            status = ShootingStatus.reloading;
+            weapon.currentAmmo = ammo;
+            currentAmmos[weaponIndex] = ammo;
+            currentReloadTime = reloadTime;
+        }
     }
 
     float GetReduceAcuracyAngle()
@@ -137,18 +151,18 @@ public class ShootingScript : MonoBehaviour
     {
         try
         {
+            if (status == ShootingStatus.outofammo)
+                return;
             if (currentReloadTime > 0)
                 currentReloadTime -= Time.deltaTime;
-            if (weapon.currentAmmo <= 0 && status == "shooting")
+            if (weapon.currentAmmo <= 0 && status == ShootingStatus.shooting)
             {
                 Reload();
             }
-            else if (status == "reloading" && currentReloadTime <= 0)
+            else if (status == ShootingStatus.reloading && currentReloadTime <= 0)
             {
                 //isToggled = false;
-                weapon.currentAmmo = weapon.maxAmmo;
-                currentAmmo = weapon.maxAmmo;
-                status = "shooting";
+                status = ShootingStatus.shooting;
             }
             if (delayShootTime > 0)
                 delayShootTime -= Time.deltaTime;
@@ -156,11 +170,11 @@ public class ShootingScript : MonoBehaviour
             //cursor.LoadImage(File.ReadAllBytes("Assets/Resources/Images/Weapons/Crosshair.png"));
             //cursor = Utilities.Resize(cursor, cursorSize + cursorSize*(100-(int)currentAccuracy) / 100, cursorSize + cursorSize*(int)(100 - (int)currentAccuracy) / 100);
             //Cursor.SetCursor(cursor, new Vector2(cursor.width / 2, cursor.height / 2), CursorMode.ForceSoftware);
-            if (status == "shooting" && isToggled == true && delayShootTime <= 0)
+            if (status == ShootingStatus.shooting && isToggled == true && delayShootTime <= 0)
             {
                 //isToggled = false;
                 weapon.currentAmmo--;
-                currentAmmo--;
+                currentAmmos[weapon.index]--;
                 if (weapon.name == "Shotgun")
                     for (int i = 0; i < 10; i++)
                     {

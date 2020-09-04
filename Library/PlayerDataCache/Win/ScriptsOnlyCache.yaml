@@ -9,7 +9,6 @@ ScriptsOnlyBuild:
     - CharacterHPDisplay
     - CharacterInventory
     - CharacterLevelDisplayScript
-    - CharacterMoneyDisplayScript
     - CharacterScript
     - CharacterStaminaDisplay
     - CharacterStatus
@@ -59,7 +58,6 @@ ScriptsOnlyBuild:
     - UnityEditor.U2D.Animation.BoneGizmo
     Unity.2D.Tilemap.Editor.dll:
     - UnityEditor.Tilemaps.GridBrush
-    - UnityEditor.Tilemaps.GridBrushEditor
     - UnityEditor.Tilemaps.GridPaintPaletteClipboard
     - UnityEditor.Tilemaps.GridPaintPaletteWindow
     - UnityEditor.Tilemaps.GridPaintingState
@@ -185,8 +183,6 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 12734}
     - Class: 114
-      Script: {instanceID: 12944}
-    - Class: 114
       Script: {instanceID: 13016}
     - Class: 114
       Script: {instanceID: 13092}
@@ -304,6 +300,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 11982}
     - Class: 114
+      Script: {instanceID: 12042}
+    - Class: 114
       Script: {instanceID: 12100}
     - Class: 114
       Script: {instanceID: 12180}
@@ -337,6 +335,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 13046}
     - Class: 114
       Script: {instanceID: 13186}
+    - Class: 114
+      Script: {instanceID: 13394}
     - Class: 114
       Script: {instanceID: 13534}
     - Class: 114
@@ -470,7 +470,7 @@ ScriptsOnlyBuild:
     className: TMP_Dropdown
   - hash:
       serializedVersion: 2
-      Hash: 60d54a4eb1eba5f6be40b58fea8f3c82
+      Hash: 23a4a212dfe2e8358be92f0943c52e44
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: CharacterInventory
@@ -548,7 +548,7 @@ ScriptsOnlyBuild:
     className: DamageDisplay
   - hash:
       serializedVersion: 2
-      Hash: f16c884f6a3fb8e462c22a39d4c7b871
+      Hash: 8d3d5469f0057b3b4bf84eace2254ed6
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: ShootingScript
@@ -644,7 +644,7 @@ ScriptsOnlyBuild:
     className: ScreenSpaceReflections
   - hash:
       serializedVersion: 2
-      Hash: 0df6595fe1a63328d19bead6147c6e75
+      Hash: 7b552ae3b61e8514f6f0aa0c32d0743b
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: CharacterScript
@@ -1594,4 +1594,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/Scenes/StartMenu.unity
   - Assets/Scenes/Game.unity
-  playerPath: E:/Tai_lieu/GitHub/DungeonCrawlerHub/DungeonCrawler/Releases/DungeonCrawler.exe
+  playerPath: E:/Tai_lieu/DungeonCrawlerWithUnity/DungeonCrawlerWithUnity/Releases/DungeonCrawler.exe

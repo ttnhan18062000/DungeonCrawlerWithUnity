@@ -21,10 +21,10 @@ public class GameScript : MonoBehaviour
 
     private void Awake()
     {
-        pauseMenuUI = GameObject.FindGameObjectWithTag("PauseMenuUI");
-        characterTabUI = GameObject.FindGameObjectWithTag("CharacterTabUI");
-        pauseMenuUI.SetActive(false);
-        characterTabUI.SetActive(false);
+        //pauseMenuUI = GameObject.FindGameObjectWithTag("PauseMenuUI");
+        //characterTabUI = GameObject.FindGameObjectWithTag("CharacterTabUI");
+        //pauseMenuUI.SetActive(false);
+        //characterTabUI.SetActive(false);
         CommonEnemy = Resources.Load<GameObject>("Prefabs/Enemies/Common/Common");
         SniperEnemy = Resources.Load<GameObject>("Prefabs/Enemies/Sniper/Sniper");
     }

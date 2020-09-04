@@ -146,7 +146,7 @@ MonoBehaviour:
   filterMasks: []
   delayShot: 1
   bulletSpeed: 1500
-  accuracy: 0
+  accuracy: 92.5
 --- !u!114 &6524783154682247582
 MonoBehaviour:
   m_ObjectHideFlags: 0

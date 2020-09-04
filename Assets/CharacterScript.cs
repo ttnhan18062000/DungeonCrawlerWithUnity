@@ -2,6 +2,7 @@
 //using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -39,6 +40,10 @@ public class CharacterScript : MonoBehaviour
 
     public float speed;
 
+    public CharacterStatus characterStatus;
+    public CharacterInventory characterInventory;
+    public ShootingScript shootingScript;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.tag == "EnemyBullet")
@@ -54,8 +59,8 @@ public class CharacterScript : MonoBehaviour
             effect.transform.GetChild(0).transform.GetChild(0).GetComponent<Text>().text = damage.ToString();
             Destroy(effect, 0.5f);
 
-            gameObject.GetComponent<CharacterStatus>().currentHP -= damage;
-            if (gameObject.GetComponent<CharacterStatus>().currentHP <= 0)
+            characterStatus.currentHP -= damage;
+            if (characterStatus.currentHP <= 0)
                 Destroy(gameObject);
         }
     }
@@ -63,11 +68,15 @@ public class CharacterScript : MonoBehaviour
     private void Awake()
     {
         Cursor.visible = false;
+        characterStatus = GetComponent<CharacterStatus>();
+        characterInventory = GetComponent<CharacterInventory>();
+        shootingScript = GetComponent<ShootingScript>();
 
         CreateCharacter();
         LoadAbility();
         LoadCharacterInventory();
         EquipWeapon();
+        DisplayUI();
     }
 
     void Start()
@@ -84,8 +93,8 @@ public class CharacterScript : MonoBehaviour
 
         List<Attribute> listAttribute = new List<Attribute>(4) { new Attribute(10, "Strength"), new Attribute(10, "Endurance"), new Attribute(10, "Dexterity"), new Attribute(10, "Perception") };
 
-        gameObject.GetComponent<CharacterStatus>().character = new Character(gameObject, transform.up, "Normal", listOfStats, listAttribute, new Level(1, 600));
-        gameObject.GetComponent<CharacterStatus>().LoadCharacter();
+        characterStatus.character = new Character(gameObject, transform.up, "Normal", listOfStats, listAttribute, new Level(1, 600));
+        characterStatus.LoadCharacter();
 
         LoadCharacterStats();
     }
@@ -101,11 +110,11 @@ public class CharacterScript : MonoBehaviour
 
     public void LoadCharacterStats()
     {
-        maxStamina = GetComponent<CharacterStatus>().character.GetStats("Stamina");
+        maxStamina = characterStatus.character.GetStats("Stamina");
         currentStamina = maxStamina;
-        speed = GetComponent<CharacterStatus>().character.GetStats("Speed");
+        speed = characterStatus.character.GetStats("Speed");
         sprintSpeed = speed * 2;
-        if (gameObject.GetComponent<CharacterStatus>().character.level.unspendAttributePoint > 0)
+        if (characterStatus.character.level.unspendAttributePoint > 0)
             GameObject.FindGameObjectWithTag("CharacterLevelUI").transform.GetChild(3).GetComponent<Image>().color = new Color32(255, 255, 0, 255);
         else
             GameObject.FindGameObjectWithTag("CharacterLevelUI").transform.GetChild(3).GetComponent<Image>().color = new Color32(255, 255, 0, 0);
@@ -113,42 +122,75 @@ public class CharacterScript : MonoBehaviour
 
     public void LoadCharacterInventory()
     {
-        CharacterInventory inventory = gameObject.GetComponent<CharacterInventory>();
-        inventory.listWeapon = new List<Weapon>();
-        inventory.listWeapon.Add(new Weapon("Pistol", 1, 70, 10, 10, 5, 0.25f, 1500f, "SemiAuto"));
-        inventory.listWeapon.Add(new Weapon("Assault", 3, 70, 50, 50, 5, 0.08f, 2000f, "FullAuto"));
-        inventory.listWeapon.Add(new Weapon("Shotgun", 2, 50, 6, 6, 3, 0.7f, 1500f, "SemiAuto"));
-        inventory.listWeapon.Add(new Weapon("SniperRifle", 3, 95, 10, 10, 20, 0.7f, 4000f, "SemiAuto"));
-        inventory.currentWeaponUse = 0;
+        characterInventory.listWeapon = new List<Weapon>();
+        characterInventory.listWeapon.Add(new Weapon("Pistol", 1, 70, 10, 10, 5, 0.25f, 1500f, "SemiAuto", 0));
+        characterInventory.listWeapon.Add(new Weapon("Assault", 3, 70, 50, 50, 5, 0.08f, 2000f, "FullAuto", 1));
+        characterInventory.listWeapon.Add(new Weapon("Shotgun", 2, 50, 6, 6, 3, 0.7f, 1500f, "SemiAuto", 2));
+        characterInventory.listWeapon.Add(new Weapon("SniperRifle", 3, 95, 10, 10, 20, 0.7f, 4000f, "SemiAuto", 3));
+        characterInventory.currentWeaponUse = 0;
+
+        characterInventory.listAmmo = new List<int>();
+        for (int i = 0; i < characterInventory.listWeapon.Count; i++)
+            characterInventory.listAmmo.Add(60);
+
+        characterInventory.listWeaponName = new List<string>();
+        for (int i = 0; i < characterInventory.listWeapon.Count; i++)
+            characterInventory.listWeaponName.Add(characterInventory.listWeapon[i].name);
+
+        LoadWeaponAmmo();
     }
+
+    public void LoadWeaponAmmo()
+    {
+        shootingScript.weaponNames = characterInventory.listWeaponName;
+        shootingScript.currentAmmos = new List<int>();
+        for (int i = 0; i < characterInventory.listWeapon.Count; i++)
+        {
+            shootingScript.currentAmmos.Add(characterInventory.listWeapon[i].maxAmmo);
+        }
+    }
+
 
     public void EquipWeapon()
     {
         if (currentWeapon != null)
             Destroy(currentWeapon);
-        CharacterInventory inventory = gameObject.GetComponent<CharacterInventory>();
-        weaponObject = inventory.listWeapon[inventory.currentWeaponUse];
+        weaponObject = characterInventory.listWeapon[characterInventory.currentWeaponUse];
         weapon = Resources.Load<GameObject>("Prefabs/" + weaponObject.name);
         currentWeapon = Instantiate(weapon, transform);
-        ShootingScript characterShooting = gameObject.GetComponent<ShootingScript>();
-        characterShooting.character = gameObject.GetComponent<CharacterStatus>().character;
-        characterShooting.LoadWeapon();
+        shootingScript.character = characterStatus.character;
+        shootingScript.LoadWeapon();
+    }
+
+    public void UpdateAmmo(string weaponName, int num)
+    {
+        characterInventory.UpdateTotalAmmo(weaponName, num);
+    }
+
+    public int GetNumAmmoCanBeReloaded(string weaponName)
+    {
+        return characterInventory.GetNumAmmoCanBeReloaded(weaponName);
     }
 
     public void AddEXP(int value)
     {
-        gameObject.GetComponent<CharacterStatus>().character.level.LevelAddEXP(value);
+        characterStatus.character.level.LevelAddEXP(value);
     }
 
     public void AddCoin(int value)
     {
-        gameObject.GetComponent<CharacterInventory>().money += value;
+        characterInventory.UpdateMoney(value);
+    }
+
+    public void DisplayUI()
+    {
+        characterInventory.DisplayCharacterInventoryUI();
     }
 
     // Update is called once per frame
     void Update()
     {
-        //float speed = gameObject.GetComponent<CharacterStatus>().speed;
+        //float speed = characterStatus.speed;
         float v = Input.GetAxis("Vertical");
         float h = Input.GetAxis("Horizontal");
         if (new Vector2(h, v) != Vector2.zero)
@@ -249,7 +291,7 @@ public class CharacterScript : MonoBehaviour
 
         if (isSprinted == false && currentStamina < maxStamina)
         {
-            speed = gameObject.GetComponent<CharacterStatus>().speed;
+            speed = characterStatus.speed;
             currentStamina += staminaRecoverySpeed * maxStamina * Time.deltaTime;
         }
         //END SPRINT
@@ -259,14 +301,14 @@ public class CharacterScript : MonoBehaviour
         //AIM
         Transform crosshair = transform.GetChild(0).GetChild(0);
         crosshair.GetComponent<RectTransform>().position = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y,1f);
-        crosshair.GetChild(0).GetComponent<Image>().fillAmount = Mathf.Max(0,1 - transform.GetComponent<ShootingScript>().delayShootTime / weaponObject.delayShoot);
+        crosshair.GetChild(0).GetComponent<Image>().fillAmount = Mathf.Max(0,1 - shootingScript.delayShootTime / weaponObject.delayShoot);
         //END AIM
         if (weaponObject.firingMode == "FullAuto")
             if (Input.GetMouseButton(0))
-                gameObject.GetComponent<ShootingScript>().isToggled = true;
+                shootingScript.isToggled = true;
         if (weaponObject.firingMode == "SemiAuto" || weaponObject.firingMode == "ShotGunMode")
             if (Input.GetMouseButtonDown(0))
-                gameObject.GetComponent<ShootingScript>().isToggled = true;
+                shootingScript.isToggled = true;
         //END SHOOT
 
         //SWITCH WEAPON
@@ -274,21 +316,20 @@ public class CharacterScript : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                gameObject.GetComponent<CharacterInventory>().SwitchWeapon(-1);
+                characterInventory.SwitchWeapon(-1);
             }
             else
             {
-                gameObject.GetComponent<CharacterInventory>().SwitchWeapon(1);
+                characterInventory.SwitchWeapon(1);
             }
 
             EquipWeapon();
-            gameObject.GetComponent<ShootingScript>().LoadWeapon();
         }
         //END SWITCH WEAPON
 
         //RELOAD WEAPON
         if(Input.GetKeyDown(KeyCode.R))
-            gameObject.GetComponent<ShootingScript>().Reload();
+            shootingScript.Reload();
         //END RELOAD WEPON
     }
 

@@ -31,9 +31,9 @@ public class CharacterTabScript : MonoBehaviour
 
     private void Awake()
     {
-        weaponListCurrent = gameObject.transform.GetChild(4).GetChild(2).GetChild(0).gameObject;
-        attributeListCurrent = gameObject.transform.GetChild(2).GetChild(2).GetChild(2).GetChild(1).GetChild(0).gameObject;
-        statsListCurrent = gameObject.transform.GetChild(2).GetChild(2).GetChild(3).GetChild(1).GetChild(0).gameObject;
+        //weaponListCurrent = gameObject.transform.GetChild(4).GetChild(2).GetChild(0).gameObject;
+        //attributeListCurrent = gameObject.transform.GetChild(2).GetChild(2).GetChild(2).GetChild(1).GetChild(0).gameObject;
+        //statsListCurrent = gameObject.transform.GetChild(2).GetChild(2).GetChild(3).GetChild(1).GetChild(0).gameObject;
         inventory = GameObject.FindGameObjectWithTag("Character").gameObject.GetComponent<CharacterInventory>();
         status = GameObject.FindGameObjectWithTag("Character").gameObject.GetComponent<CharacterStatus>();
         tabs = new List<string>() { "Character", "Inventory", "Weapon" };
@@ -41,9 +41,9 @@ public class CharacterTabScript : MonoBehaviour
         LoadListWeapon();
         currentTab = "Character";
         gameObject.transform.GetChild(2).gameObject.SetActive(true);
-        gameObject.transform.GetChild(1).GetChild(0).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
-        gameObject.transform.GetChild(1).GetChild(1).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
-        gameObject.transform.GetChild(1).GetChild(2).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
+        //gameObject.transform.GetChild(1).GetChild(0).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
+        //gameObject.transform.GetChild(1).GetChild(1).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
+        //gameObject.transform.GetChild(1).GetChild(2).gameObject.GetComponent<Button>().onClick.AddListener(TabChangeClick);
 
     }
     // Start is called before the first frame update
