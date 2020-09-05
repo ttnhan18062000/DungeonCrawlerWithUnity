@@ -23,13 +23,20 @@ public class WeaponDisplay : MonoBehaviour
     {
         try
         {
-            if (weapon.status == ShootingScript.ShootingStatus.shooting)
+            if (weapon.listStatus[weapon.weapon.index] == ShootingScript.ShootingStatus.shooting)
             {
                 weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3((((float)weapon.currentAmmos[weapon.weapon.index] / (float)weapon.maxAmmo) - 1) * weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
+                //weaponCurrentAmmoDisplay.GetComponent<Image>().color = new Color32(0, 255, 255, 255);
             }
-            if (weapon.status == ShootingScript.ShootingStatus.reloading)
+            if (weapon.listStatus[weapon.weapon.index] == ShootingScript.ShootingStatus.reloading)
             {
                 weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3(-(weapon.currentReloadTime / weapon.reloadTime) * weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
+                //weaponCurrentAmmoDisplay.GetComponent<Image>().color = new Color32(0, 255, 255, 255);
+            }
+            if(weapon.listStatus[weapon.weapon.index] == ShootingScript.ShootingStatus.outofammo)
+            {
+                weaponCurrentAmmoDisplay.localPosition = localPos + new Vector3(-weaponCurrentAmmoDisplay.sizeDelta.x, 0, 0);
+                //weaponCurrentAmmoDisplay.GetComponent<Image>().color = new Color32(255, 0, 0, 255);
             }
         }
         catch(System.Exception e) { }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,9 +15,11 @@ public class CharacterTabScript : MonoBehaviour
 
     public GameObject statsListCurrent;
 
-    private List<Vector2> limitScroll = new List<Vector2>(3) { new Vector2(), new Vector2(), new Vector2()}; //v.x : Bottom, v.y : Top
+    public GameObject weaponListStatsCurrent;
 
-    private List<string> limitScrollNameDefine = new List<string>(3) { "WeaponList", "AttributeList", "StatsList"};
+    private List<Vector2> limitScroll = new List<Vector2>(4) { new Vector2(), new Vector2(), new Vector2(), new Vector2()}; //v.x : Bottom, v.y : Top
+
+    private List<string> limitScrollNameDefine = new List<string>(4) { "WeaponList", "AttributeList", "StatsList", "WeaponListStats"};
 
     public CharacterInventory inventory;
     public CharacterStatus status;
@@ -26,6 +29,8 @@ public class CharacterTabScript : MonoBehaviour
     public static List<string> tabs;
 
     public bool IsAddAttributeEnabled = false;
+
+    private List<string> listWeaponStatsName = new List<string>(7) { "Damage", "Ammo", "ReloadSpeed", "ShootingSpeed", "Accuracy", "BulletSpeed", "Recoil", "FiringMode" };
 
     //public GameObject unspendAttributePoint; = transform.GetChild(2).GetChild(2).GetChild(2).GetChild(0).GetChild(1)
 
@@ -65,6 +70,7 @@ public class CharacterTabScript : MonoBehaviour
             else if (currentTab == "Weapon")
             {
                 ScrollTab(weaponListCurrent, "WeaponList");
+                ScrollTab(weaponListStatsCurrent, "WeaponListStats");
             }
         }
     }
@@ -295,8 +301,10 @@ public class CharacterTabScript : MonoBehaviour
         LoadWeaponToDisplayTable(name);
     }
 
-    private void LoadWeaponToDisplayTable(string name)
+    private void LoadWeaponToDisplayTable(string weaponName)
     {
+        LoadWeaponStatsList(weaponName);
+        /*
         gameObject.transform.GetChild(4).gameObject.transform.GetChild(3).gameObject.transform.GetChild(0).gameObject.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Weapons/" + name + "Icon");
         Weapon weapon = inventory.listWeapon.FirstOrDefault(w => w.name == name);
         GameObject weaponStats = gameObject.transform.GetChild(4).gameObject.transform.GetChild(3).gameObject.transform.GetChild(1).gameObject;
@@ -307,6 +315,36 @@ public class CharacterTabScript : MonoBehaviour
         weaponStats.transform.GetChild(4).transform.GetChild(1).GetComponent<Text>().text = weapon.acuracy.ToString();
         weaponStats.transform.GetChild(5).transform.GetChild(1).GetComponent<Text>().text = weapon.baseBulletSpeed.ToString();
         weaponStats.transform.GetChild(6).transform.GetChild(1).GetComponent<Text>().text = weapon.firingMode;
+        */
+    }
+
+    private void LoadWeaponStatsList(string weaponName)
+    {
+        GameObject weaponListStatsDisplay = transform.GetChild(4).GetChild(3).GetChild(0).GetChild(0).gameObject;
+        if (weaponListStatsDisplay.transform.GetChildCount() == 0)
+        {
+            int num = listWeaponStatsName.Count;
+            GameObject statsPrefab = Resources.Load<GameObject>("Prefabs/UI/WeaponStatsDisplay");
+
+            float weaponListStatsDisplaySizeY = (125f + 10f) * num + 10f;
+            float weaponListStatsDisplayLocationY = (874f - weaponListStatsDisplaySizeY) / 2;
+
+            weaponListStatsDisplay.GetComponent<RectTransform>().sizeDelta = new Vector2(1133, weaponListStatsDisplaySizeY);
+            weaponListStatsDisplay.GetComponent<RectTransform>().localPosition = new Vector3(0, weaponListStatsDisplayLocationY, 0);
+
+            limitScroll[limitScrollNameDefine.IndexOf("WeaponListStats")] = new Vector2((weaponListStatsDisplaySizeY - 874f) / 2, weaponListStatsDisplayLocationY);
+
+            for (int i = 0; i < num; i++)
+            {
+                GameObject obj = Instantiate(statsPrefab, Vector3.zero, Quaternion.identity);
+
+                RectTransform rect = obj.GetComponent<RectTransform>();
+                rect.SetParent(weaponListStatsDisplay.transform);
+                rect.localPosition = new Vector3(0, (weaponListStatsDisplaySizeY - 125f - 250f * i) / 2 - (i + 1) * 10f, 0);
+
+                obj.transform.GetChild(0).GetComponent<Text>().text = listWeaponStatsName[i];
+            }
+        }
     }
 
     public void LoadWeaponTab()

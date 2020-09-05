@@ -28,7 +28,7 @@ public class ShootingScript : MonoBehaviour
 
     public enum ShootingStatus { shooting, reloading, outofammo}
 
-    public ShootingStatus status = ShootingStatus.shooting;
+    //public ShootingStatus status = ShootingStatus.shooting;
 
     public int maxAmmo;
     public float reloadTime;
@@ -44,6 +44,7 @@ public class ShootingScript : MonoBehaviour
     public List<float> accuracyThresholdRatios = new List<float>(4) { 5, 2, 5, 2 };
     public List<string> weaponNames;
     public List<int> currentAmmos = new List<int>();
+    public List<ShootingStatus> listStatus = new List<ShootingStatus>();
 
     private AudioSource normalShootingAudio;
     private CharacterScript characterScript;
@@ -54,7 +55,6 @@ public class ShootingScript : MonoBehaviour
         shootingPoint = Resources.Load<GameObject>("Prefabs/Character/ShootingPosition");
         normalShootingAudio = GetComponent<AudioSource>();
         characterScript = GetComponent<CharacterScript>();
-        status = ShootingStatus.shooting;
     }
 
     void Start()
@@ -104,14 +104,15 @@ public class ShootingScript : MonoBehaviour
 
     public void Reload()
     {
+        characterScript.UpdateTotalAmmo(weapon.name, weapon.currentAmmo);
         int ammo = characterScript.GetNumAmmoCanBeReloaded(weapon.name);
         int weaponIndex = weapon.index;
-        characterScript.UpdateAmmo(weapon.name, -(ammo - currentAmmos[weaponIndex]));
+        characterScript.UpdateTotalAmmo(weapon.name, -ammo);
         if (ammo == 0)
-            status = ShootingStatus.outofammo;
+            listStatus[weapon.index] = ShootingStatus.outofammo;
         else
         {
-            status = ShootingStatus.reloading;
+            listStatus[weapon.index] = ShootingStatus.reloading;
             weapon.currentAmmo = ammo;
             currentAmmos[weaponIndex] = ammo;
             currentReloadTime = reloadTime;
@@ -127,7 +128,7 @@ public class ShootingScript : MonoBehaviour
 
     public void Shoot()
     {
-        normalShootingAudio.Play();
+        //normalShootingAudio.Play();
         Vector3 v = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
         shootingPoint.transform.position = transform.position + v.normalized * Mathf.Sqrt(sr.bounds.size.x * sr.bounds.size.x + sr.bounds.size.y * sr.bounds.size.y);
 
@@ -139,30 +140,32 @@ public class ShootingScript : MonoBehaviour
         Rigidbody2D body = go.GetComponent<Rigidbody2D>();
         go.transform.position = shootingPoint.transform.position;
 
-        v = Utilities.Rotate(v, GetReduceAcuracyAngle());
+        v = Utilities.Rotate(v, GetReduceAcuracyAngle()).normalized;
 
-        body.velocity = bullet.GetComponent<BulletScript>().speed * v.normalized;
+        body.velocity = bullet.GetComponent<BulletScript>().speed * v;
 
         if (currentAccuracy > accuracyThreshold)
             currentAccuracy -= accuracyReducePerShoot * (100 - meanAccuracy);
+
+        characterScript.StartRecoil();
     }
     // Update is called once per frame
     void Update()
     {
         try
         {
-            if (status == ShootingStatus.outofammo)
+            if (listStatus[weapon.index] == ShootingStatus.outofammo)
                 return;
             if (currentReloadTime > 0)
                 currentReloadTime -= Time.deltaTime;
-            if (weapon.currentAmmo <= 0 && status == ShootingStatus.shooting)
+            if (weapon.currentAmmo <= 0 && listStatus[weapon.index] == ShootingStatus.shooting)
             {
                 Reload();
             }
-            else if (status == ShootingStatus.reloading && currentReloadTime <= 0)
+            else if (listStatus[weapon.index] == ShootingStatus.reloading && currentReloadTime <= 0)
             {
                 //isToggled = false;
-                status = ShootingStatus.shooting;
+                listStatus[weapon.index] = ShootingStatus.shooting;
             }
             if (delayShootTime > 0)
                 delayShootTime -= Time.deltaTime;
@@ -170,7 +173,7 @@ public class ShootingScript : MonoBehaviour
             //cursor.LoadImage(File.ReadAllBytes("Assets/Resources/Images/Weapons/Crosshair.png"));
             //cursor = Utilities.Resize(cursor, cursorSize + cursorSize*(100-(int)currentAccuracy) / 100, cursorSize + cursorSize*(int)(100 - (int)currentAccuracy) / 100);
             //Cursor.SetCursor(cursor, new Vector2(cursor.width / 2, cursor.height / 2), CursorMode.ForceSoftware);
-            if (status == ShootingStatus.shooting && isToggled == true && delayShootTime <= 0)
+            if (listStatus[weapon.index] == ShootingStatus.shooting && isToggled == true && delayShootTime <= 0)
             {
                 //isToggled = false;
                 weapon.currentAmmo--;
