@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DoorScript : MonoBehaviour
 {
-    public bool isTriggered;
+    public bool isOpened;
     SpriteRenderer leftDoor;
     SpriteRenderer rightDoor;
     // Start is called before the first frame update
@@ -12,15 +12,33 @@ public class DoorScript : MonoBehaviour
     {
         leftDoor = transform.GetChild(0).GetComponent<SpriteRenderer>();
         rightDoor = transform.GetChild(1).GetComponent<SpriteRenderer>();
+        isOpened = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isTriggered)
-        {
-            leftDoor.size = Vector2.MoveTowards(leftDoor.size, new Vector2(0, 1), 0.01f);
-            rightDoor.size = Vector2.MoveTowards(leftDoor.size, new Vector2(0, 1), 0.01f);
-        }
+    }
+
+    public void Change()
+    {
+        if (isOpened)
+            Close();
+        else
+            Open();
+    }
+
+    public void Open()
+    {
+        transform.GetChild(0).GetComponent<Animator>().SetBool("IsOpened", true);
+        transform.GetChild(1).GetComponent<Animator>().SetBool("IsOpened", true);
+        isOpened = true;
+    }
+
+    public void Close()
+    {
+        transform.GetChild(0).GetComponent<Animator>().SetBool("IsOpened", false);
+        transform.GetChild(1).GetComponent<Animator>().SetBool("IsOpened", false);
+        isOpened = false;
     }
 }

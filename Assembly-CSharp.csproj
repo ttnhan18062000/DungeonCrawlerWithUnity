@@ -116,6 +116,7 @@
     <Compile Include="Assets\Resources\Prefabs\Enemies\SemiCircleCreator.cs" />
     <Compile Include="Assets\Resources\Prefabs\Enemies\Sniper\SniperScript.cs" />
     <Compile Include="Assets\Resources\Prefabs\Enemies\Summoner\SummonerScript.cs" />
+    <Compile Include="Assets\RoomScript.cs" />
     <Compile Include="Assets\Script.cs" />
     <Compile Include="Assets\Scripts\Attribute.cs" />
     <Compile Include="Assets\Scripts\Character.cs" />

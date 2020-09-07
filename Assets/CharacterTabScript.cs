@@ -321,7 +321,7 @@ public class CharacterTabScript : MonoBehaviour
     private void LoadWeaponStatsList(string weaponName)
     {
         GameObject weaponListStatsDisplay = transform.GetChild(4).GetChild(3).GetChild(0).GetChild(0).gameObject;
-        if (weaponListStatsDisplay.transform.GetChildCount() == 0)
+        if (weaponListStatsDisplay.transform.childCount == 0)
         {
             int num = listWeaponStatsName.Count;
             GameObject statsPrefab = Resources.Load<GameObject>("Prefabs/UI/WeaponStatsDisplay");

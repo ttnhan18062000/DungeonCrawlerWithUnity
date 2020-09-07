@@ -57,7 +57,7 @@ public class CharacterStatus : MonoBehaviour
         foreach (string s in onDeathImpact)
             Invoke(s, 0f);
         transform.GetChild(1).GetComponent<Animator>().SetBool("isDead", true);
-        for (int i = 0; i < transform.GetChildCount(); i++)
+        for (int i = 0; i < transform.childCount; i++)
             Destroy(transform.GetChild(i).gameObject);
         Destroy(gameObject, 0.5f);
     }
