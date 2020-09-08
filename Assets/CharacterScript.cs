@@ -137,7 +137,7 @@ public class CharacterScript : MonoBehaviour
 
         characterInventory.listAmmo = new List<int>();
         for (int i = 0; i < characterInventory.listWeapon.Count; i++)
-            characterInventory.listAmmo.Add(60);
+            characterInventory.listAmmo.Add(600);
 
         characterInventory.listWeaponName = new List<string>();
         for (int i = 0; i < characterInventory.listWeapon.Count; i++)

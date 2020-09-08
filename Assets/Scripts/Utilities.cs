@@ -7,6 +7,19 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
+    public class Node
+    {
+        public int id;
+        public int distance;
+        public List<Node> next;
+        public Node(int id)
+        {
+            this.id = id;
+            this.next = new List<Node>();
+            this.distance = 0;
+        }
+    }
+
     public class Utilities
     {
         static public Vector2 Rotate(Vector2 v, float delta)
@@ -77,6 +90,30 @@ namespace Assets.Scripts
             float range = (1 - accuracy / 100f)*Mathf.PI;
             float r = Random.Range(-range, range);
             return r;
+        }
+
+        public static int GetDistanceBetweenTwoNodeWithBFS(Node start, int destID)
+        {
+            if (start.id == destID)
+                return start.distance;
+            Queue<Node> queue = new Queue<Node>();
+            List<int> visitedNodeID = new List<int>();
+            visitedNodeID.Add(start.id);
+            queue.Enqueue(start);
+            while(queue.Count != 0)
+            {
+                Node tmp = queue.Dequeue();
+                if (tmp.id == destID)
+                    return tmp.distance;
+                visitedNodeID.Add(tmp.id);
+                for (int i = 0; i < tmp.next.Count; i++)
+                    if (!visitedNodeID.Contains(tmp.next[i].id))
+                    {
+                        tmp.next[i].distance = tmp.distance + 1;
+                        queue.Enqueue(tmp.next[i]);
+                    }
+            }
+            return -1;
         }
     }
 }

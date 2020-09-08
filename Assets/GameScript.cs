@@ -12,6 +12,7 @@ public class Room
     public int y;
     public int id;
     public bool isCleared;
+    public int distance;
     //public int distanceFromStart;
     public Room(int x, int y, int id)
     {
@@ -19,6 +20,7 @@ public class Room
         this.y = y;
         this.id = id;
         this.isCleared = false;
+        this.distance = -1;
         //this.distanceFromStart = 0;
     }
 }
@@ -32,6 +34,8 @@ public class GameScript : MonoBehaviour
     public static bool isPaused = false;
     public static bool pauseMenuShowed = false;
     public static bool characterTabShowed = false;
+
+    public int[] listEnemiesPower;
 
     public GameObject character;
 
@@ -49,6 +53,7 @@ public class GameScript : MonoBehaviour
     public List<GameObject> rooms;
     public List<Room> roomsInf;
     public List<GameObject> passages;
+    public List<Node> roomsNode;
 
     public int roomWidth;
     public int roomHeight;
@@ -64,6 +69,12 @@ public class GameScript : MonoBehaviour
     public GameStatus gameStatus;
     public List<GameObject> enemiesRemaining;
     public int clearedRoomAmount;
+
+    public GameObject minimap;
+    private int currentRoomIndex;
+    private List<int[]> listPassageMinimap = new List<int[]>(12) { new int[2] {-2000, 3000}, new int[2] {2000, 3000},
+    new int[2] {-4000, 1500}, new int[2] {0, 1500}, new int[2] {4000, 1500}, new int[2] {-2000, 0}, new int[2] {2000, 0},
+    new int[2] {-4000, -1500}, new int[2] {0, -1500}, new int[2] {4000, -1500}, new int[2] {-2000, -3000}, new int[2] {2000, -3000}};
 
     private void Awake()
     {
@@ -101,6 +112,8 @@ public class GameScript : MonoBehaviour
         MapGenerator();
         gameStatus = GameStatus.Idle;
         clearedRoomAmount = 1;
+        listEnemiesPower = new int[2] { 2, 4 };
+        currentRoomIndex = -1;
     }
 
     void SpawnBoss()
@@ -118,19 +131,51 @@ public class GameScript : MonoBehaviour
             {
                 Vector3 posRoom = rooms[i].transform.position;
                 Vector3 posChar = character.transform.position;
-                if (!roomsInf[i].isCleared && posChar.x <= posRoom.x + roomWidth / 2 && posChar.x >= posRoom.x - roomWidth / 2 && posChar.y <= posRoom.y + roomHeight / 2 && posChar.y >= posRoom.y - roomHeight / 2)
+                if (posChar.x <= posRoom.x + roomWidth / 2 && posChar.x >= posRoom.x - roomWidth / 2 && posChar.y <= posRoom.y + roomHeight / 2 && posChar.y >= posRoom.y - roomHeight / 2)
                 {
-                    gameStatus = GameStatus.Battle;
-                    for (int j = 2; j < rooms[i].transform.childCount; j++)
-                        rooms[i].transform.GetChild(j).GetComponent<DoorScript>().Close();
-                    for (int j = 0; j < clearedRoomAmount; j++)
+                    //Update Minimap
+                    if (currentRoomIndex != i)
                     {
-                        int x = Random.Range(Mathf.RoundToInt(posRoom.x - roomWidth / 2 + 300), Mathf.RoundToInt(posRoom.x + roomWidth / 2 - 300));
-                        int y = Random.Range(Mathf.RoundToInt(posRoom.y - roomHeight / 2 + 300), Mathf.RoundToInt(posRoom.y + roomHeight / 2 - 300));
-                        enemiesRemaining.Add(Instantiate(CommonEnemy, new Vector3(x, y, 0), Quaternion.identity));
+                        currentRoomIndex = i;
+                        int pX = roomsInf[i].x;
+                        int pY = roomsInf[i].y;
+                        List<Room> listRooms = new List<Room>();
+                        for (int u = 1; u >= -1; u--)
+                            for (int v = -1; v <= 1; v++)
+                                if (roomsInf.Any(r => r.x == pX + v && r.y == pY + u))
+                                    listRooms.Add(roomsInf.First(r => r.x == pX + v && r.y == pY + u));
+                                else
+                                    listRooms.Add(null);
+                        List<bool> listPsg = new List<bool>();
+                        for (int j = 0; j < listPassageMinimap.Count; j++)
+                            listPsg.Add(passages.Any(p => p.transform.position.x == posRoom.x + listPassageMinimap[j][0] && p.transform.position.y == posRoom.y + listPassageMinimap[j][1]));
+                        minimap.GetComponent<MinimapScript>().UpdateMinimap(listRooms, listPsg);
                     }
-                    currentFightingRoomIndex = i;
-                    break;
+                    //Check state of room
+                    if (!roomsInf[i].isCleared)
+                    {
+                        gameStatus = GameStatus.Battle;
+                        for (int j = 2; j < rooms[i].transform.childCount; j++)
+                            rooms[i].transform.GetChild(j).GetComponent<DoorScript>().Close();
+                        int roomPower = roomsInf[i].distance * 4;
+                        while (roomPower >= listEnemiesPower.Min())
+                        {
+                            int x = Random.Range(Mathf.RoundToInt(posRoom.x - roomWidth / 2 + 300), Mathf.RoundToInt(posRoom.x + roomWidth / 2 - 300));
+                            int y = Random.Range(Mathf.RoundToInt(posRoom.y - roomHeight / 2 + 300), Mathf.RoundToInt(posRoom.y + roomHeight / 2 - 300));
+                            int enemiesId = 0;
+                            do
+                            {
+                                enemiesId = Random.Range(0, listEnemiesPower.Length);
+                            } while (roomPower < listEnemiesPower[enemiesId]);
+                            if (enemiesId == 0)
+                                enemiesRemaining.Add(Instantiate(CommonEnemy, new Vector3(x, y, 0), Quaternion.identity));
+                            else if (enemiesId == 1)
+                                enemiesRemaining.Add(Instantiate(SniperEnemy, new Vector3(x, y, 0), Quaternion.identity));
+                            roomPower -= listEnemiesPower[enemiesId];
+                        }
+                        currentFightingRoomIndex = i;
+                        break;
+                    }
                 }
             }
         }
@@ -148,22 +193,6 @@ public class GameScript : MonoBehaviour
                     rooms[currentFightingRoomIndex].transform.GetChild(i).GetComponent<DoorScript>().Open();
             }
         }
-        /*
-        if (currentTime <= 0)
-        {
-            int x = Random.Range(-2200, 2500);
-            int y = Random.Range(-1000, 1500);
-            Instantiate(CommonEnemy, new Vector3(x, y, 0), Quaternion.identity);
-            //x = Random.Range(-2200, 2500);
-            //y = Random.Range(-1000, 1500);
-            //Instantiate(SniperEnemy, new Vector3(x, y, 0), Quaternion.identity);
-            currentTime = delaySpawn;
-        }
-        else
-            currentTime -= Time.deltaTime;
-            */
-
-
 
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.I))
         {
@@ -207,10 +236,11 @@ public class GameScript : MonoBehaviour
 
     public void MapGenerator()
     {
-        List<int> topRooms = new List<int>(8) { 0, 4, 5, 6, 10, 11, 12, 14 };
-        List<int> bottomRooms = new List<int>(8) { 1, 4, 7, 8, 10, 11, 13, 14 };
-        List<int> leftRooms = new List<int>(8) { 2, 5, 7, 9, 10, 12, 13, 14 };
-        List<int> rightRooms = new List<int>(8) { 3, 6, 8, 9, 11, 12, 13, 14 };
+
+        List<int> topRooms = new List<int>(7) { 4, 5, 6, 10, 11, 12, 14 };
+        List<int> bottomRooms = new List<int>(7) { 4, 7, 8, 10, 11, 13, 14 };
+        List<int> leftRooms = new List<int>(7) { 5, 7, 9, 10, 12, 13, 14 };
+        List<int> rightRooms = new List<int>(7) { 6, 8, 9, 11, 12, 13, 14 };
         List<List<int>> roomNextPos = new List<List<int>>();
         //roomPrefabs.Add(Resources.Load<GameObject>("Prefabs/Map/TRoom"));0
         //roomPrefabs.Add(Resources.Load<GameObject>("Prefabs/Map/BRoom"));1
@@ -248,6 +278,7 @@ public class GameScript : MonoBehaviour
         Queue<int[]> previousRoomPosQueue = new Queue<int[]>();
         List<int[]> existedRoomPos = new List<int[]>();
         List<int[]> connectedRoomsDirection = new List<int[]>();
+        roomsNode = new List<Node>();
         roomsInf = new List<Room>();
         roomsInf.Add(new Room(0, 0, 14));
         roomsInf[0].isCleared = true;
@@ -330,6 +361,8 @@ public class GameScript : MonoBehaviour
                 previousRoomPosQueue.Enqueue(new int[2] { posX, posY});
             }
         }
+        for (int i = 0; i < roomsInf.Count; i++)
+            roomsNode.Add(new Node(i));
         for(int i = 0; i < roomsInf.Count; i++)
         {
             int roomID = roomsInf[i].id;
@@ -357,8 +390,40 @@ public class GameScript : MonoBehaviour
                         break;
                     }
                 }
-            }    
-
+            }
+        }
+        for (int i = 0; i < roomsInf.Count; i++)
+        {
+            int pX = roomsInf[i].x;
+            int pY = roomsInf[i].y;
+            for (int j = 0; j < roomNextPos[roomsInf[i].id].Count; j++)
+            {
+                if (roomNextPos[roomsInf[i].id][j] == 0)
+                {
+                    int id = roomsInf.IndexOf(roomsInf.First(r => r.x == pX && r.y == pY - 1));
+                    roomsNode[i].next.Add(roomsNode.First(r => r.id == id));
+                }
+                else if (roomNextPos[roomsInf[i].id][j] == 1)
+                {
+                    int id = roomsInf.IndexOf(roomsInf.First(r => r.x == pX && r.y == pY + 1));
+                    roomsNode[i].next.Add(roomsNode.First(r => r.id == id));
+                }
+                else if (roomNextPos[roomsInf[i].id][j] == 2)
+                {
+                    int id = roomsInf.IndexOf(roomsInf.First(r => r.x == pX + 1 && r.y == pY));
+                    roomsNode[i].next.Add(roomsNode.First(r => r.id == id));
+                }
+                else if (roomNextPos[roomsInf[i].id][j] == 3)
+                {
+                    int id = roomsInf.IndexOf(roomsInf.First(r => r.x == pX - 1 && r.y == pY));
+                    roomsNode[i].next.Add(roomsNode.First(r => r.id == id));
+                }
+            }
+        }
+        Node startNode = roomsNode[0];
+        for (int i = 0; i < roomsNode.Count; i++)
+        {
+            roomsInf[i].distance = Utilities.GetDistanceBetweenTwoNodeWithBFS(startNode, i);
         }
         for (int i = 0; i < roomsInf.Count; i++)
         {
@@ -367,6 +432,7 @@ public class GameScript : MonoBehaviour
             for (int j = 2; j < obj.transform.childCount; j++)
                 obj.transform.GetChild(j).GetComponent<DoorScript>().Open();
             rooms.Add(obj);
+            rooms[i].name = i.ToString() + "_" + roomsInf[i].distance.ToString();
         }
     }
 }
