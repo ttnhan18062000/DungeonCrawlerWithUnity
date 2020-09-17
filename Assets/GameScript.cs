@@ -12,6 +12,7 @@ public class Room
     public int y;
     public int id;
     public bool isCleared;
+    public bool visible;
     public int distance;
     //public int distanceFromStart;
     public Room(int x, int y, int id)
@@ -21,7 +22,21 @@ public class Room
         this.id = id;
         this.isCleared = false;
         this.distance = -1;
+        this.visible = false;
         //this.distanceFromStart = 0;
+    }
+}
+
+public class Passage
+{
+    public float x;
+    public float y;
+    public bool visible;
+    public Passage(float x, float y)
+    {
+        this.x = x;
+        this.y = y;
+        this.visible = visible;
     }
 }
 
@@ -52,6 +67,7 @@ public class GameScript : MonoBehaviour
     private GameObject verticalPassagePrefab;
     public List<GameObject> rooms;
     public List<Room> roomsInf;
+    public List<Passage> passagesInf;
     public List<GameObject> passages;
     public List<Node> roomsNode;
 
@@ -71,6 +87,9 @@ public class GameScript : MonoBehaviour
     public int clearedRoomAmount;
 
     public GameObject minimap;
+    public GameObject mapCurrent;
+    public GameObject map;
+    public bool isDisplayMap;
     private int currentRoomIndex;
     private List<int[]> listPassageMinimap = new List<int[]>(12) { new int[2] {-2000, 3000}, new int[2] {2000, 3000},
     new int[2] {-4000, 1500}, new int[2] {0, 1500}, new int[2] {4000, 1500}, new int[2] {-2000, 0}, new int[2] {2000, 0},
@@ -112,8 +131,9 @@ public class GameScript : MonoBehaviour
         MapGenerator();
         gameStatus = GameStatus.Idle;
         clearedRoomAmount = 1;
-        listEnemiesPower = new int[2] { 2, 4 };
+        listEnemiesPower = new int[1] { 2};
         currentRoomIndex = -1;
+        isDisplayMap = false;
     }
 
     void SpawnBoss()
@@ -125,6 +145,20 @@ public class GameScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(Input.GetKeyDown(KeyCode.M))
+        {
+            if(isDisplayMap)
+            {
+                map.SetActive(false);
+                isDisplayMap = false;
+            }
+            else
+            {
+                map.SetActive(true);
+                isDisplayMap = true;
+                mapCurrent.GetComponent<MapScript>().UpdateMap(roomsInf, passagesInf, currentRoomIndex);
+            }
+        }
         if (gameStatus == GameStatus.Idle)
         {
             for (int i = 0; i < roomsInf.Count; i++)
@@ -148,7 +182,37 @@ public class GameScript : MonoBehaviour
                                     listRooms.Add(null);
                         List<bool> listPsg = new List<bool>();
                         for (int j = 0; j < listPassageMinimap.Count; j++)
-                            listPsg.Add(passages.Any(p => p.transform.position.x == posRoom.x + listPassageMinimap[j][0] && p.transform.position.y == posRoom.y + listPassageMinimap[j][1]));
+                            if (passages.Any(p => p.transform.position.x == posRoom.x + listPassageMinimap[j][0] && p.transform.position.y == posRoom.y + listPassageMinimap[j][1]))
+                            {
+                                listPsg.Add(true);
+                                //passagesInf[passages.IndexOf(passages.First(p => p.transform.position.x == posRoom.x + listPassageMinimap[j][0] && p.transform.position.y == posRoom.y + listPassageMinimap[j][1]))].visible = true;
+                            }
+                            else
+                                listPsg.Add(false);
+                        if (!roomsInf[i].visible)
+                        {
+                            roomsInf[i].visible = true;
+                            try
+                            {
+                                passagesInf.First(p => p.x == pX + 0.5f && p.y == pY).visible = true;
+                            }
+                            catch (System.Exception e) { }
+                            try
+                            {
+                                passagesInf.First(p => p.x == pX - 0.5f && p.y == pY).visible = true;
+                            }
+                            catch (System.Exception e) { }
+                            try
+                            {
+                                passagesInf.First(p => p.x == pX && p.y == pY + 0.5f).visible = true;
+                            }
+                            catch (System.Exception e) { }
+                            try
+                            {
+                                passagesInf.First(p => p.x == pX && p.y == pY - 0.5f).visible = true;
+                            }
+                            catch (System.Exception e) { }
+                        }
                         minimap.GetComponent<MinimapScript>().UpdateMinimap(listRooms, listPsg);
                     }
                     //Check state of room
@@ -236,7 +300,6 @@ public class GameScript : MonoBehaviour
 
     public void MapGenerator()
     {
-
         List<int> topRooms = new List<int>(7) { 4, 5, 6, 10, 11, 12, 14 };
         List<int> bottomRooms = new List<int>(7) { 4, 7, 8, 10, 11, 13, 14 };
         List<int> leftRooms = new List<int>(7) { 5, 7, 9, 10, 12, 13, 14 };
@@ -280,6 +343,7 @@ public class GameScript : MonoBehaviour
         List<int[]> connectedRoomsDirection = new List<int[]>();
         roomsNode = new List<Node>();
         roomsInf = new List<Room>();
+        passagesInf = new List<Passage>();
         roomsInf.Add(new Room(0, 0, 14));
         roomsInf[0].isCleared = true;
         existedRoomPos.Add(new int[2] { 0, 0 });
@@ -332,21 +396,25 @@ public class GameScript : MonoBehaviour
             {
                 psg = Instantiate(verticalPassagePrefab);
                 psg.transform.position = new Vector3(posX * (roomWidth + hPassageSize + blockSize), posY * (roomHeight + vPassageSize + blockSize) + (roomHeight + blockSize + vPassageSize)/2 , 0);
+                passagesInf.Add(new Passage(posX, posY + 0.5f));
             }    
             else if (nextRoomPos == 1)
             {
                 psg = Instantiate(verticalPassagePrefab);
                 psg.transform.position = new Vector3(posX * (roomWidth + hPassageSize + blockSize), posY * (roomHeight + vPassageSize + blockSize) - (roomHeight + blockSize + vPassageSize) / 2, 0);
+                passagesInf.Add(new Passage(posX, posY - 0.5f));
             }
             else if (nextRoomPos == 2)
             {
                 psg = Instantiate(horizontalPassagePrefab);
                 psg.transform.position = new Vector3(posX * (roomWidth + hPassageSize + blockSize) - (roomWidth + blockSize + hPassageSize) / 2, posY * (roomHeight + vPassageSize + blockSize), 0);
+                passagesInf.Add(new Passage(posX - 0.5f, posY));
             }
             else
             {
                 psg = Instantiate(horizontalPassagePrefab);
                 psg.transform.position = new Vector3(posX * (roomWidth + hPassageSize + blockSize) + (roomWidth + blockSize + hPassageSize) / 2, posY * (roomHeight + vPassageSize + blockSize), 0);
+                passagesInf.Add(new Passage(posX + 0.5f, posY));
             }
             passages.Add(psg);
             //GameObject obj = Instantiate(roomPrefabs[randomRoomID]);

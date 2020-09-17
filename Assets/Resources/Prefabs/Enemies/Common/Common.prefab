@@ -144,9 +144,10 @@ MonoBehaviour:
   projectile: {fileID: 7888927742103283130, guid: 980bb5ff3bde63046939f9aa9dcb3bde,
     type: 3}
   filterMasks: []
-  delayShot: 1
-  bulletSpeed: 1500
+  delayShoot: 0
+  bulletSpeed: 1000
   accuracy: 92.5
+  fireMode: 0
 --- !u!114 &6524783154682247582
 MonoBehaviour:
   m_ObjectHideFlags: 0

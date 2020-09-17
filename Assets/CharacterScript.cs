@@ -130,7 +130,7 @@ public class CharacterScript : MonoBehaviour
     {
         characterInventory.listWeapon = new List<Weapon>();
         characterInventory.listWeapon.Add(new Weapon("Pistol", 1, 70, 10, 10, 5, 0.25f, 1500f, "SemiAuto", 0.2f, 0.25f, 0));
-        characterInventory.listWeapon.Add(new Weapon("Assault", 3, 70, 50, 50, 5, 0.08f, 2000f, "FullAuto", 0.3f, 0.25f, 1));
+        characterInventory.listWeapon.Add(new Weapon("Assault", 3, 70, 50, 50, 10, 0.08f, 2000f, "FullAuto", 0.3f, 0.25f, 1));
         characterInventory.listWeapon.Add(new Weapon("Shotgun", 2, 50, 6, 6, 3, 0.7f, 1500f, "SemiAuto", 0.8f, 0.25f, 2));
         characterInventory.listWeapon.Add(new Weapon("SniperRifle", 3, 95, 10, 10, 20, 0.7f, 4000f, "SemiAuto", 0.8f, 0.25f, 3));
         characterInventory.currentWeaponUse = 0;
@@ -286,7 +286,7 @@ public class CharacterScript : MonoBehaviour
         if (actionStatus == ActionStatus.sprinting && currentStamina > 0)
         {
             speed = sprintSpeed;
-            currentStamina -= staminaLossSpeed * Time.deltaTime;
+            currentStamina -= staminaLossSpeed * Time.deltaTime * maxStamina;
         }
 
         if (actionStatus == ActionStatus.sprinting && currentStamina <= 0)

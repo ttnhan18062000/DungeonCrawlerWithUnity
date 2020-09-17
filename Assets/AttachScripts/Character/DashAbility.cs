@@ -15,14 +15,14 @@ public class DashAbility : MonoBehaviour
     public float dashStartDelay;
     public Rigidbody2D body;
     public Vector2 direction;
+    public GameObject character;
     // Start is called before the first frame update
 
     public void LoadDashStats()
     {
         CharacterStatus character = gameObject.GetComponent<CharacterStatus>();
-        dashDelay = 2f / (1f + character.character.GetStats("Reflexes") / 2);
-        dashSpeed = character.character.GetStats("Speed") * 4;
-        dashTime = 0.2f;
+        dashDelay = 1.25f / (1f + character.character.GetStats("Reflexes") / 2);
+        dashSpeed = character.character.GetStats("Speed") * 3;
     }
     private void Awake()
     {
@@ -46,12 +46,14 @@ public class DashAbility : MonoBehaviour
                 if (body.velocity.magnitude > dashSpeed)
                     body.velocity = body.velocity.normalized * dashSpeed;
                 dashStartTime -= Time.deltaTime;
+                character.tag = "Untargetable";
             }
             else
             {
                 body.velocity = Vector2.zero;
                 isDashed = false;
                 isToggled = false;
+                character.tag = "Character";
                 dashStartDelay = dashDelay;
             }
         }
